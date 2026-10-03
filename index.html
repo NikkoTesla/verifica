@@ -3,63 +3,171 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Verifica | NikkoTesla</title>
+<meta name="description" content="Verifica que un documento de NikkoTesla es original: comparación de su huella criptográfica SHA-256 contra el registro público, sin subir el archivo.">
+<title>Verificación de autenticidad | NikkoTesla</title>
 <style>
-  :root { --bg:#0b0f14; --card:#121922; --borde:#223042; --txt:#e6edf3; --sub:#8b9bb0; --acc:#38bdf8; --ok:#22c55e; --mal:#ef4444; --warn:#f59e0b; }
-  * { box-sizing: border-box; }
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--txt); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; padding:16px; }
-  main { width:100%; max-width:560px; }
-  h1 { font-size:1.5rem; margin:0 0 4px; }
-  h1 span { color:var(--acc); }
-  p.sub { color:var(--sub); margin:0 0 20px; }
-  #drop { display:block; border:2px dashed var(--borde); border-radius:12px; background:var(--card); padding:40px 20px; text-align:center; cursor:pointer; transition:border-color .15s; }
-  #drop.over, #drop:hover { border-color:var(--acc); }
-  #drop small { display:block; color:var(--sub); margin-top:6px; }
-  #res { margin-top:16px; border-radius:12px; padding:16px 18px; display:none; border:1px solid var(--borde); background:var(--card); }
-  #res.ok { border-color:var(--ok); } #res.mal { border-color:var(--mal); } #res.no { border-color:var(--warn); }
-  #res strong { display:block; font-size:1.05rem; margin-bottom:4px; }
-  #res.ok strong { color:var(--ok); } #res.mal strong { color:var(--mal); } #res.no strong { color:var(--warn); }
-  code { color:var(--sub); font-size:.75rem; word-break:break-all; }
-  footer { margin-top:20px; color:var(--sub); font-size:.8rem; }
+  :root {
+    color-scheme: dark;
+    --bg:#070b10; --panel:#0d141c; --panel2:#111b26; --line:#1e2c3b; --line2:#2a3d52;
+    --txt:#e8eef5; --sub:#93a4b8; --mut:#64778d;
+    --acc:#38bdf8; --acc2:#0ea5e9; --ok:#34d399; --mal:#f87171; --warn:#fbbf24;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background-image:radial-gradient(900px 400px at 50% -120px, rgba(56,189,248,.12), transparent 70%); }
+  .wrap { max-width:760px; margin:0 auto; padding:40px 16px 56px; }
+
+  .brand { display:flex; align-items:center; gap:10px; color:var(--sub); font-size:.85rem; letter-spacing:.14em; text-transform:uppercase; }
+  .brand svg { width:22px; height:22px; color:var(--acc); flex:none; }
+  .brand b { color:var(--txt); font-weight:600; }
+
+  h1 { font-size:clamp(1.6rem,4.6vw,2.2rem); line-height:1.2; margin:18px 0 12px; letter-spacing:-.01em; }
+  h1 em { font-style:normal; color:var(--acc); }
+  .lead { color:var(--sub); margin:0 0 28px; max-width:62ch; }
+
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .card h2 { font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mut); margin:0 0 10px; font-weight:600; }
+  .card p { margin:0; color:var(--sub); font-size:.95rem; }
+  .card p + p { margin-top:10px; }
+  .card strong { color:var(--txt); font-weight:600; }
+
+  .threat { margin-bottom:16px; border-left:3px solid var(--warn); }
+  .threat ul { margin:12px 0 0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px; }
+  .threat li { font:500 .78rem var(--mono); color:var(--warn); border:1px solid rgba(251,191,36,.35); background:rgba(251,191,36,.07); padding:3px 10px; border-radius:999px; }
+
+  #drop { display:block; margin:16px 0; border:1.5px dashed var(--line2); border-radius:14px; background:var(--panel2);
+    padding:38px 20px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s; }
+  #drop:hover, #drop.over { border-color:var(--acc); background:#0f1d2b; }
+  #drop:focus-within { outline:2px solid var(--acc); outline-offset:2px; }
+  #drop svg { width:34px; height:34px; color:var(--acc); margin-bottom:8px; }
+  #drop .t { display:block; font-weight:600; }
+  #drop .s { display:block; color:var(--mut); font-size:.85rem; margin-top:4px; }
+
+  #res { display:none; margin:0 0 16px; border-radius:14px; border:1px solid var(--line); background:var(--panel); overflow:hidden; }
+  #res .head { display:flex; gap:12px; align-items:flex-start; padding:18px 20px; }
+  #res .ico { width:28px; height:28px; flex:none; margin-top:2px; }
+  #res .ttl { font-size:1.15rem; font-weight:700; line-height:1.3; }
+  #res .det { color:var(--sub); font-size:.95rem; margin-top:2px; }
+  #res.ok  { border-color:rgba(52,211,153,.55); } #res.ok  .ico, #res.ok  .ttl { color:var(--ok); }
+  #res.mal { border-color:rgba(248,113,113,.55); } #res.mal .ico, #res.mal .ttl { color:var(--mal); }
+  #res.no  { border-color:rgba(251,191,36,.5); }  #res.no  .ico, #res.no  .ttl { color:var(--warn); }
+  #res.wait .ttl { color:var(--sub); }
+  #res .rows { border-top:1px solid var(--line); padding:12px 20px 16px; display:grid; gap:10px; }
+  #res .row { display:grid; gap:2px; }
+  #res .k { color:var(--mut); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; }
+  #res .v { font:.82rem/1.5 var(--mono); word-break:break-all; color:var(--txt); }
+
+  .steps { display:grid; gap:12px; grid-template-columns:repeat(3,1fr); margin:16px 0; }
+  .step { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .step .n { font:600 .75rem var(--mono); color:var(--acc); }
+  .step h3 { margin:6px 0 4px; font-size:.98rem; }
+  .step p { margin:0; color:var(--sub); font-size:.86rem; }
+  @media (max-width:640px) { .steps { grid-template-columns:1fr; } }
+
+  .tech code { font:.85em var(--mono); color:var(--acc); background:rgba(56,189,248,.08); padding:1px 6px; border-radius:5px; }
+  footer { margin-top:28px; color:var(--mut); font-size:.8rem; display:flex; flex-wrap:wrap; gap:6px 16px; justify-content:space-between; }
+  footer a { color:var(--sub); }
 </style>
 </head>
 <body>
-<main>
-  <h1>Sello <span>NikkoTesla</span></h1>
-  <p class="sub">Comprueba que tu documento es el original y no fue alterado ni un solo byte.</p>
+<div class="wrap">
+
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/></svg>
+    <span><b>NikkoTesla</b> · Sello de autenticidad</span>
+  </div>
+
+  <h1>Verificación de autenticidad de documentos de <em>NikkoTesla</em></h1>
+  <p class="lead">Cada documento oficial de NikkoTesla tiene una huella criptográfica única, registrada públicamente. Si el archivo cambia aunque sea en un solo byte, la huella deja de coincidir.</p>
+
+  <section class="card threat" aria-label="Por qué verificar">
+    <h2>Si lo obtuviste fuera de los canales oficiales</h2>
+    <p>Un documento que no descargaste directamente de NikkoTesla pudo haber sido <strong>alterado en el camino</strong>. Verifícalo aquí antes de abrirlo para evitar instalar sin darte cuenta software malicioso en tu dispositivo.</p>
+    <ul aria-label="Riesgos que se evitan"><li>malware</li><li>spyware</li><li>backdoors</li><li>macros / scripts ocultos</li></ul>
+  </section>
+
   <label id="drop">
     <input id="file" type="file" hidden>
-    Arrastra aquí el archivo o toca para elegirlo
-    <small>El archivo no se sube a ningún lado: se analiza en tu navegador.</small>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4m0 0L8 8m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+    <span class="t">Arrastra tu documento aquí o toca para elegirlo</span>
+    <span class="s">PDF, DOCX o cualquier archivo. No se sube a ningún servidor: se analiza en tu navegador.</span>
   </label>
-  <div id="res" role="status"></div>
-  <footer>SHA-256 calculado localmente y comparado contra el registro público <code>manifest.json</code>.</footer>
-</main>
+
+  <div id="res" role="status" aria-live="polite"></div>
+
+  <div class="steps">
+    <div class="step"><div class="n">01 · HASH</div><h3>Huella del archivo</h3><p>Tu navegador calcula el SHA-256 del archivo, localmente.</p></div>
+    <div class="step"><div class="n">02 · REGISTRO</div><h3>Comparación pública</h3><p>Se busca esa huella en el registro <code>manifest.json</code>, firmado en Git.</p></div>
+    <div class="step"><div class="n">03 · VEREDICTO</div><h3>Original o alterado</h3><p>Coincidencia exacta: es el original. Cualquier cambio produce otra huella.</p></div>
+  </div>
+
+  <section class="card tech">
+    <h2>Detalle técnico</h2>
+    <p>La huella es un <code>SHA-256</code> de 256 bits calculado sobre los bytes exactos del archivo final publicado, mediante <code>crypto.subtle.digest</code> en tu navegador. Es computacionalmente inviable fabricar un archivo distinto con la misma huella.</p>
+    <p>El registro vive en un repositorio público de GitHub con commits firmados con GPG, de modo que cualquier cambio al registro queda trazado. El código de esta página es abierto y auditable.</p>
+  </section>
+
+  <footer>
+    <span>Esta verificación no envía tu archivo a ningún lado.</span>
+    <span><a href="manifest.json">Ver registro público</a> · <a href="https://github.com/NikkoTesla/verifica">Código fuente</a></span>
+  </footer>
+</div>
+
 <script>
 const idSolicitado = new URLSearchParams(location.search).get("id");
 const res = document.getElementById("res"), drop = document.getElementById("drop"), input = document.getElementById("file");
 
-function mostrar(clase, titulo, detalle, hash) {
-  res.className = clase; res.style.display = "block";
-  res.replaceChildren();
-  const s = document.createElement("strong"); s.textContent = titulo; res.append(s);
-  if (detalle) { const d = document.createElement("div"); d.textContent = detalle; res.append(d); }
-  if (hash) { const c = document.createElement("code"); c.textContent = "SHA-256: " + hash; res.append(c); }
+const ICONOS = {
+  ok:  '<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/>',
+  mal: '<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m9.5 9.5 5 5m0-5-5 5"/>',
+  no:  '<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="M12 8.5v4.2M12 16h.01"/>',
+  wait:'<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/>'
+};
+const fmtBytes = n => n < 1024 ? n + " B" : n < 1048576 ? (n/1024).toFixed(1) + " KB" : (n/1048576).toFixed(2) + " MB";
+
+function mostrar(clase, titulo, detalle, filas) {
+  res.className = clase; res.style.display = "block"; res.replaceChildren();
+  const head = document.createElement("div"); head.className = "head";
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("class", "ico"); svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor"); svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round"); svg.setAttribute("stroke-linejoin", "round");
+  svg.innerHTML = ICONOS[clase] || ICONOS.wait;
+  const box = document.createElement("div");
+  const t = document.createElement("div"); t.className = "ttl"; t.textContent = titulo; box.append(t);
+  if (detalle) { const d = document.createElement("div"); d.className = "det"; d.textContent = detalle; box.append(d); }
+  head.append(svg, box); res.append(head);
+  if (filas && filas.length) {
+    const rows = document.createElement("div"); rows.className = "rows";
+    for (const [k, v] of filas) {
+      const r = document.createElement("div"); r.className = "row";
+      const kk = document.createElement("span"); kk.className = "k"; kk.textContent = k;
+      const vv = document.createElement("span"); vv.className = "v"; vv.textContent = v;
+      r.append(kk, vv); rows.append(r);
+    }
+    res.append(rows);
+  }
 }
 
 async function verificar(file) {
-  mostrar("no", "Calculando...", "");
+  mostrar("wait", "Calculando huella SHA-256...", file.name);
   const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer()))]
     .map(b => b.toString(16).padStart(2, "0")).join("");
   let manifest;
   try { manifest = await (await fetch("manifest.json", { cache: "no-store" })).json(); }
   catch { return mostrar("no", "No se pudo cargar el registro", "Intenta de nuevo en un momento."); }
 
+  const base = [["Archivo", `${file.name} (${fmtBytes(file.size)})`], ["SHA-256 calculado", hash]];
   const hit = manifest.find(d => d.sha256 === hash);
-  if (hit) return mostrar("ok", "Auténtico", `${hit.titulo}, ${hit.id}, publicado ${hit.fecha}`, hash);
+  if (hit) return mostrar("ok", `Auténtico: ${hit.titulo}, ${hit.id}, publicado ${hit.fecha}`,
+    "La huella coincide exactamente con el registro oficial. El archivo no ha sido alterado.", base);
   if (idSolicitado && manifest.some(d => d.id === idSolicitado))
-    return mostrar("mal", "Este archivo fue modificado", "Descarga la versión original desde los canales oficiales.", hash);
-  mostrar("no", "No es un documento registrado de NikkoTesla", "", hash);
+    return mostrar("mal", "Este archivo fue modificado",
+      "Descarga la versión original desde los canales oficiales. No lo abras ni lo ejecutes.", base);
+  mostrar("no", "No es un documento registrado de NikkoTesla",
+    "Su huella no figura en el registro oficial. Si esperabas un documento de NikkoTesla, descárgalo de los canales oficiales.", base);
 }
 
 input.addEventListener("change", () => input.files[0] && verificar(input.files[0]));
