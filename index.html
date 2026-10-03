@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verifica | NikkoTesla</title>
+<style>
+  :root { --bg:#0b0f14; --card:#121922; --borde:#223042; --txt:#e6edf3; --sub:#8b9bb0; --acc:#38bdf8; --ok:#22c55e; --mal:#ef4444; --warn:#f59e0b; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--txt); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; padding:16px; }
+  main { width:100%; max-width:560px; }
+  h1 { font-size:1.5rem; margin:0 0 4px; }
+  h1 span { color:var(--acc); }
+  p.sub { color:var(--sub); margin:0 0 20px; }
+  #drop { border:2px dashed var(--borde); border-radius:12px; background:var(--card); padding:40px 20px; text-align:center; cursor:pointer; transition:border-color .15s; }
+  #drop.over, #drop:hover { border-color:var(--acc); }
+  #drop small { display:block; color:var(--sub); margin-top:6px; }
+  #res { margin-top:16px; border-radius:12px; padding:16px 18px; display:none; border:1px solid var(--borde); background:var(--card); }
+  #res.ok { border-color:var(--ok); } #res.mal { border-color:var(--mal); } #res.no { border-color:var(--warn); }
+  #res strong { display:block; font-size:1.05rem; margin-bottom:4px; }
+  #res.ok strong { color:var(--ok); } #res.mal strong { color:var(--mal); } #res.no strong { color:var(--warn); }
+  code { color:var(--sub); font-size:.75rem; word-break:break-all; }
+  footer { margin-top:20px; color:var(--sub); font-size:.8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sello <span>NikkoTesla</span></h1>
+  <p class="sub">Comprueba que tu documento es el original y no fue alterado ni un solo byte.</p>
+  <label id="drop">
+    <input id="file" type="file" hidden>
+    Arrastra aquí el archivo o toca para elegirlo
+    <small>El archivo no se sube a ningún lado: se analiza en tu navegador.</small>
+  </label>
+  <div id="res" role="status"></div>
+  <footer>SHA-256 calculado localmente y comparado contra el registro público <code>manifest.json</code>.</footer>
+</main>
+<script>
+const idSolicitado = new URLSearchParams(location.search).get("id");
+const res = document.getElementById("res"), drop = document.getElementById("drop"), input = document.getElementById("file");
+
+function mostrar(clase, titulo, detalle, hash) {
+  res.className = clase; res.style.display = "block";
+  res.replaceChildren();
+  const s = document.createElement("strong"); s.textContent = titulo; res.append(s);
+  if (detalle) { const d = document.createElement("div"); d.textContent = detalle; res.append(d); }
+  if (hash) { const c = document.createElement("code"); c.textContent = "SHA-256: " + hash; res.append(c); }
+}
+
+async function verificar(file) {
+  mostrar("no", "Calculando...", "");
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer()))]
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  let manifest;
+  try { manifest = await (await fetch("manifest.json", { cache: "no-store" })).json(); }
+  catch { return mostrar("no", "No se pudo cargar el registro", "Intenta de nuevo en un momento."); }
+
+  const hit = manifest.find(d => d.sha256 === hash);
+  if (hit) return mostrar("ok", "Auténtico", `${hit.titulo}, ${hit.id}, publicado ${hit.fecha}`, hash);
+  if (idSolicitado && manifest.some(d => d.id === idSolicitado))
+    return mostrar("mal", "Este archivo fue modificado", "Descarga la versión original desde los canales oficiales.", hash);
+  mostrar("no", "No es un documento registrado de NikkoTesla", "", hash);
+}
+
+input.addEventListener("change", () => input.files[0] && verificar(input.files[0]));
+["dragenter","dragover"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", ev => ev.dataTransfer.files[0] && verificar(ev.dataTransfer.files[0]));
+</script>
+</body>
+</html>
