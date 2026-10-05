@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "NT-2026-001",
+    "titulo": "FacturaBot - Guía de usuario gratuita",
+    "tipo": "pdf",
+    "fecha": "2026-10-05",
+    "sha256": "3d184ae69dc28be644b7688f422ee8746c52c9e9dcad56f099aaf90ec2c0b44f",
+    "bytes": 1805657
+  }
+]
