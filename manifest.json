@@ -6,5 +6,13 @@
     "fecha": "2026-10-05",
     "sha256": "3396d41321a8d1500b2aa271e51e6dc7882cf11e1d22168aa436d1d9a59c709c",
     "bytes": 2653504
+  },
+  {
+    "id": "NT-2026-001",
+    "titulo": "FacturaBot - Guía de usuario gratuita",
+    "tipo": "pdf",
+    "fecha": "2026-10-05",
+    "sha256": "519ebc0e250e1274dd09d105a5f7eede44a15ffdd1f0a0d9385d5c8644467257",
+    "bytes": 2652666
   }
 ]
