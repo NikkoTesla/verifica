@@ -160,8 +160,8 @@
       color: var(--cyan);
     }
 
-    main {
-      padding: 48px 0 8px;
+    main.wrap {
+      padding-top: 40px;
     }
 
     h2 {
@@ -229,8 +229,12 @@
       margin-top: 16px;
       background: var(--white);
       border: 1px solid var(--stone);
-      border-left-width: 5px;
       border-radius: 8px;
+      scroll-margin-top: 16px;
+    }
+
+    #res:focus {
+      outline: none;
     }
 
     #res .head {
@@ -254,36 +258,16 @@
       margin-top: 4px;
     }
 
-    #res.ok {
-      border-left-color: var(--ok);
-    }
-
-    #res.ok .ico {
+    #res.ok .ico,
+    #res.ok .ttl {
       color: var(--ok);
     }
 
-    #res.mal {
-      border-left-color: var(--mal);
-    }
-
-    #res.mal .ico {
+    #res.mal .ico,
+    #res.mal .ttl,
+    #res.no .ico,
+    #res.no .ttl {
       color: var(--mal);
-    }
-
-    #res.mal .ttl {
-      color: var(--mal);
-    }
-
-    #res.no {
-      border-left-color: var(--mal);
-    }
-
-    #res.no .ico {
-      color: var(--mal);
-    }
-
-    #res.wait {
-      border-left-color: var(--steel);
     }
 
     #res.wait .ico {
@@ -320,7 +304,6 @@
       padding: 16px 20px;
       background: var(--white);
       border: 1px solid var(--stone);
-      border-left: 5px solid var(--bronze);
       border-radius: 8px;
     }
 
@@ -460,7 +443,6 @@
       color: #E4EBF2;
       border-radius: 8px;
       padding: 26px 28px;
-      border-left: 5px solid var(--bronze);
     }
 
     .seguridad h2 {
@@ -609,7 +591,7 @@
         <span class="t">Arrastra tu documento aquí o toca para elegirlo</span>
         <span class="s">PDF, DOCX o cualquier archivo. No se sube a ningún servidor: se analiza en tu navegador.</span>
       </label>
-      <div id="res" role="status" aria-live="polite"></div>
+      <div id="res" role="status" aria-live="polite" tabindex="-1"></div>
 
       <div class="aviso">
         <strong>¿Lo obtuviste fuera de los <a href="#canales">canales oficiales</a>?</strong>
@@ -700,7 +682,7 @@
 
     <footer>
       <span>NikkoTesla · IA aplicada · Sistemas · Procesos · Resultados</span>
-      <span>Copyright © 2026 · NikkoTesla. Todos los derechos reservados</span>
+      <span>Copyright © 2026 · NikkoTesla. Todos los derechos reservados.</span>
     </footer>
   </main>
 
@@ -721,6 +703,7 @@
 
     function mostrar(clase, titulo, detalle, filas) {
       res.className = clase; res.style.display = "block"; res.replaceChildren();
+      requestAnimationFrame(() => { res.scrollIntoView({ block: "start" }); res.focus({ preventScroll: true }); });
       const head = document.createElement("div"); head.className = "head";
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("class", "i ico");
@@ -765,6 +748,8 @@
     ["dragleave", "drop"].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
     drop.addEventListener("drop", ev => ev.dataTransfer.files[0] && verificar(ev.dataTransfer.files[0]));
   </script>
+  <!-- Cloudflare Web Analytics -->
+  <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "27488e4e552245d3885399acd63a3096"}'></script>
 </body>
 
 </html>
