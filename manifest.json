@@ -14,5 +14,13 @@
     "fecha": "2026-10-05",
     "sha256": "519ebc0e250e1274dd09d105a5f7eede44a15ffdd1f0a0d9385d5c8644467257",
     "bytes": 2652666
+  },
+  {
+    "id": "NT-2026-002",
+    "titulo": "Skills FacturaBot - Guía para crear skills de facturación",
+    "tipo": "pdf",
+    "fecha": "2026-10-08",
+    "sha256": "20947831f282942750255b95cc13f6e7c896ced096357f58266359784c61f193",
+    "bytes": 1121246
   }
 ]
