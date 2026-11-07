@@ -22,5 +22,21 @@
     "fecha": "2026-10-08",
     "sha256": "20947831f282942750255b95cc13f6e7c896ced096357f58266359784c61f193",
     "bytes": 1121246
+  },
+  {
+    "id": "NT-2026-003",
+    "titulo": "Minuta Proyecto wellness",
+    "tipo": "pdf",
+    "fecha": "2026-11-06",
+    "sha256": "479bfa3d3fb1660d0b99d29b1f125aed2e840884ce1f52b03a1c58c57398aa42",
+    "bytes": 97362
+  },
+  {
+    "id": "NT-2026-004",
+    "titulo": "Propuesta colaboración estratégica",
+    "tipo": "pdf",
+    "fecha": "2026-11-07",
+    "sha256": "7d38b32c278b09d86e3348a33640c32a001840566fe65c4747568db03e358e3f",
+    "bytes": 164456
   }
 ]
